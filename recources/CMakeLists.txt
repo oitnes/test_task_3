@@ -1,5 +1,6 @@
-set(RECOURSE_FILES haarcascade_eye.xml haarcascade_face.xml haarcascade_smile.xml)
+set(RECOURSE_FILES "haarcascade_face.xml")
 
-foreach(${RECOURSE_FILE} ${RECOURSE_FILES})
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}\\${RECOURSE_FILE}" DESTINATION ${PROJECT_BINARY_DIR})
-endforeach()
+foreach (RESOURCE_FILE ${RECOURSE_FILES})
+    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}\\${RESOURCE_FILE}" DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    message("copied file ${CMAKE_CURRENT_SOURCE_DIR}\\${RESOURCE_FILE} to ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+endforeach ()

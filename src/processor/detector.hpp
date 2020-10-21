@@ -10,6 +10,14 @@
 
 namespace detection {
 
+    namespace config {
+        static constexpr const char *FACE_CASCADE_FILE_NAME = "haarcascade_face.xml";
+        static constexpr int NEIGHBORS_NUMBER = 3;
+        static const cv::Size MIN_OBJECT_SIZE{10, 10};
+        static const cv::Size MAX_OBJECT_SIZE{200, 200};
+        static constexpr double THRESHOLD = 0.9;
+    }
+
     struct DetectorSettings {
         double scale_factor;
         int neighbors_number;
@@ -37,36 +45,6 @@ namespace detection {
     private:
         DetectorSettings _detector_settings;
         cv::CascadeClassifier _cascade_classifier;
-    };
-
-    class FaceDetector {
-
-        using FaceRect = cv::Rect;
-        using EyeRect = cv::Rect;
-        using Eyes = std::pair<std::optional<EyeRect>, std::optional<EyeRect>>;
-        using SmileRect = cv::Rect;
-    public:
-
-        struct Detection {
-            FaceRect face;
-            std::optional<Eyes> eyes;
-            std::optional<SmileRect> smile;
-        };
-
-        explicit FaceDetector(const std::string &haar_cascade_path, double scale = 1.);
-
-        std::vector<Detection> detect(const cv::Mat &image);
-
-    private:
-        double _scale;
-
-        std::unique_ptr<HaarDetector> _face_detector;
-        std::unique_ptr<HaarDetector> _eye_detector;
-        std::unique_ptr<HaarDetector> _smile_detector;
-
-        std::vector<Detection> sort(const std::vector<cv::Rect> &faces,
-                                    const std::vector<cv::Rect> &eyes,
-                                    const std::vector<cv::Rect> &smiles) const;
     };
 
 }
