@@ -91,12 +91,11 @@ namespace processor {
                                                        std::string(path_to_image_folder));
             return;
         }
-
+        // TODO: create multi thread process
         for (auto itEntry = std::filesystem::recursive_directory_iterator(path_to_image_folder);
              itEntry != std::filesystem::recursive_directory_iterator(); ++itEntry) {
             if (itEntry->is_regular_file()) {
-                auto ext = itEntry->path().filename().extension().string();
-                if (_extensions.count(ext)) {
+                if (_extensions.count(itEntry->path().filename().extension().string())) {
                     auto file_path = itEntry->path().string();
                     try {
                         auto img = cv::imread(file_path, cv::IMREAD_COLOR);

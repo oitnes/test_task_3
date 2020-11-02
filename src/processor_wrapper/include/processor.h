@@ -4,10 +4,11 @@
 
 #include <string_view>
 #include <functional>
+#include <memory>
 
 #include <cstdint>
 
-enum BOOST_SYMBOL_VISIBLE class StatusCode : std::uint8_t {
+enum class BOOST_SYMBOL_VISIBLE StatusCode : std::uint8_t {
     SUCCESS = 0,
     IMAGE_FOLDER_IN_NOT_EXISTS = 1,
     BAD_IMAGE = 2,
