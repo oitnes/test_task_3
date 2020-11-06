@@ -1,5 +1,11 @@
+set(RUNNER_LIBS CONAN_PKG::boost)
+
+if (UNIX)
+    list(APPEND RUNNER_LIBS dl)
+endif (UNIX)
+
 add_executable(runner main.cpp)
 target_include_directories(runner PRIVATE SYSTEM CONAN_PKG::boost)
 target_include_directories(runner PRIVATE "./../processor_wrapper/include")
-target_link_libraries(runner CONAN_PKG::boost dl)
+target_link_libraries(runner ${RUNNER_LIBS})
 add_dependencies(runner processor_wrapper)

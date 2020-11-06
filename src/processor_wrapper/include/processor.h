@@ -43,9 +43,8 @@ class BOOST_SYMBOL_VISIBLE ProcessorApi {
 public:
     virtual ~ProcessorApi() = default;
 
-    virtual void init(std::shared_ptr<StatusApi> &status, InitConfig config) noexcept = 0;
+    virtual std::unique_ptr<StatusApi> init(InitConfig config) noexcept = 0;
 
-    virtual void
-    process(std::shared_ptr<StatusApi> &status, std::string_view path_to_image_folder,
-            NotificationCallback notification) noexcept = 0;
+    virtual std::unique_ptr<StatusApi> process(std::string_view path_to_image_folder,
+                                               NotificationCallback notification) noexcept = 0;
 };

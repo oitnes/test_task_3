@@ -36,6 +36,7 @@ namespace detection {
         DetectorSettings &operator=(DetectorSettings &&) = default;
     };
 
+    // need to add DNN nets as alternative detector and option in config
     class HaarDetector {
     public:
         explicit HaarDetector(DetectorSettings &&settings);

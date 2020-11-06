@@ -31,15 +31,15 @@ namespace processor {
 
         const std::string_view &message() const noexcept override;
 
-        static void success(std::shared_ptr<StatusApi> &status);
+        static std::unique_ptr<StatusApi> success();
 
-        static void images_folder_was_not_found(std::shared_ptr<StatusApi> &status, std::string_view message);
+        static std::unique_ptr<StatusApi> images_folder_was_not_found(std::string_view message);
 
-        static void bad_image(std::shared_ptr<StatusApi> &status, std::string_view message);
+        static std::unique_ptr<StatusApi> bad_image(std::string_view message);
 
-        static void system_files_was_not_found(std::shared_ptr<StatusApi> &status, std::string_view message);
+        static std::unique_ptr<StatusApi> system_files_was_not_found(std::string_view message);
 
-        static void unexpected_error(std::shared_ptr<StatusApi> &status, std::string_view message);
+        static std::unique_ptr<StatusApi> unexpected_error(std::string_view message);
 
     private:
         StatusCode _status_code;
@@ -53,11 +53,10 @@ namespace processor {
     public:
         ~ProcessorWrapper() override = default;
 
-        void init(std::shared_ptr<StatusApi> &status, InitConfig config) noexcept override;
+        std::unique_ptr<StatusApi> init(InitConfig config) noexcept override;
 
-        void
-        process(std::shared_ptr<StatusApi> &status, std::string_view path_to_image_folder,
-                NotificationCallback notification) noexcept override;
+        std::unique_ptr<StatusApi> process(std::string_view path_to_image_folder,
+                                           NotificationCallback notification) noexcept override;
 
     private:
         std::shared_ptr<detection::HaarDetector> _detector;

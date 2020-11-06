@@ -11,8 +11,12 @@ conan_cmake_run(REQUIRES ${CONAN_EXTERNAL_LIBS} BASIC_SETUP BUILD missing)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_define_targets()
 
+# folders
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 # include project
 include_directories("./src")
 
-add_subdirectory("./recources")
 add_subdirectory("./src")

@@ -63,7 +63,7 @@ int main(int argc, const char **argv) {
     if (fs::exists(library_path)) {
         std::cout << "Loading the library by path: " << library_path << std::endl;
     } else {
-        std::cerr << "Library not found by path: " << library_path;
+        std::cerr << "The library not found by path: " << library_path;
         return EXIT_FAILURE;
     }
 
@@ -75,27 +75,31 @@ int main(int argc, const char **argv) {
                 dll::load_mode::append_decorations
         );
     } catch (const std::exception &error) {
-        std::cerr << "Library loading error: " << error.what();
+        std::cerr << "Error during loading the library: " << error.what();
+        return EXIT_FAILURE;
+    }
+    std::cout << "The library was loaded" << std::endl;
+
+    auto init_status = plugin->init(InitConfig{workers_number, resource_dir});
+
+    if (!init_status->is_success()) {
+        std::cerr << "The library initialization was failed: " << std::string(init_status->message());
         return EXIT_FAILURE;
     }
 
-    std::shared_ptr<StatusApi> status;
+    auto process_status = plugin->process(images_dir,
+                                          [](std::string_view processed_image_path, std::size_t faces_number) {
+                                              std::string message{"Detected faces: "};
+                                              message += std::to_string(faces_number);
+                                              message += std::string(", by path: ");
+                                              message += processed_image_path;
+                                              message += "\n";
 
-    plugin->init(status, InitConfig{workers_number, resource_dir});
+                                              std::cout << message;
+                                          });
 
-    if (!status->is_success()) {
-        std::cerr << "Init failed: " << std::string(status->message());
-        return EXIT_FAILURE;
-    }
-
-    plugin->process(status, images_dir, [](std::string_view processed_image_path, std::size_t faces_number) {
-        std::cout << "detected faces: " << std::to_string(faces_number)
-                  << ", by path: " << processed_image_path
-                  << std::endl;
-    });
-
-    if (!status->is_success()) {
-        std::cerr << "Processed failed[" << status->message() << "]";
+    if (!init_status->is_success()) {
+        std::cerr << "Folder process was failed[" << init_status->message() << "]";
         return EXIT_FAILURE;
     }
 

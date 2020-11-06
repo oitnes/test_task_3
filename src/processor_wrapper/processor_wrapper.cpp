@@ -14,24 +14,24 @@ namespace processor {
             _status_code{status_code}, _const_message{message} {
     }
 
-    void StatusWrapper::success(std::shared_ptr<StatusApi> &status) {
-        status.reset(new StatusWrapper());
+    std::unique_ptr<StatusApi> StatusWrapper::success() {
+        return std::make_unique<StatusWrapper>();
     }
 
-    void StatusWrapper::images_folder_was_not_found(std::shared_ptr<StatusApi> &status, std::string_view message) {
-        status.reset(new StatusWrapper(StatusCode::IMAGE_FOLDER_IN_NOT_EXISTS, message));
+    std::unique_ptr<StatusApi> StatusWrapper::images_folder_was_not_found(std::string_view message) {
+        return std::make_unique<StatusWrapper>(StatusCode::IMAGE_FOLDER_IN_NOT_EXISTS, message);
     }
 
-    void StatusWrapper::bad_image(std::shared_ptr<StatusApi> &status, std::string_view message) {
-        status.reset(new StatusWrapper(StatusCode::BAD_IMAGE, message));
+    std::unique_ptr<StatusApi> StatusWrapper::bad_image(std::string_view message) {
+        return std::make_unique<StatusWrapper>(StatusCode::BAD_IMAGE, message);
     }
 
-    void StatusWrapper::system_files_was_not_found(std::shared_ptr<StatusApi> &status, std::string_view message) {
-        status.reset(new StatusWrapper(StatusCode::SYSTEM_FILES_WAS_NOT_FOUND, message));
+    std::unique_ptr<StatusApi> StatusWrapper::system_files_was_not_found(std::string_view message) {
+        return std::make_unique<StatusWrapper>(StatusCode::SYSTEM_FILES_WAS_NOT_FOUND, message);
     }
 
-    void StatusWrapper::unexpected_error(std::shared_ptr<StatusApi> &status, std::string_view message) {
-        status.reset(new StatusWrapper(StatusCode::UNEXPECTED, message));
+    std::unique_ptr<StatusApi> StatusWrapper::unexpected_error(std::string_view message) {
+        return std::make_unique<StatusWrapper>(StatusCode::UNEXPECTED, message);
     }
 
     StatusWrapper::operator bool() const noexcept {
@@ -50,14 +50,12 @@ namespace processor {
         return _const_message;
     }
 
-    void ProcessorWrapper::init(std::shared_ptr<StatusApi> &status, InitConfig config) noexcept {
+    std::unique_ptr<StatusApi> ProcessorWrapper::init(InitConfig config) noexcept {
         const std::filesystem::path haar_cascades_folder{config.resource_folder_path};
         auto haar_path = haar_cascades_folder / detection::config::FACE_CASCADE_FILE_NAME;
         if (!std::filesystem::exists(haar_path)) {
-            StatusWrapper::system_files_was_not_found(status,
-                                                      std::string("resource file was not found at folder: ") +
-                                                      haar_path.string());
-            return;
+            return StatusWrapper::system_files_was_not_found(std::string("resource file was not found at folder: ") +
+                                                             haar_path.string());
         }
 
         double scale_factor = 1.5;
@@ -69,27 +67,23 @@ namespace processor {
         try {
             _detector = std::make_unique<detection::HaarDetector>(std::move(face_detector_settings));
         } catch (const std::exception &error) {
-            StatusWrapper::unexpected_error(status, error.what());
-            return;
+            return StatusWrapper::unexpected_error(error.what());
         } catch (...) {
-            StatusWrapper::unexpected_error(status, "undefined error during detector initialization");
-            return;
+            return StatusWrapper::unexpected_error("undefined error during detector initialization");
         }
 
         _extensions.emplace(".jpg");
         _extensions.emplace(".bmp");
         _extensions.emplace(".jpeg");
 
-        StatusWrapper::success(status);
+        return StatusWrapper::success();
     }
 
-    void ProcessorWrapper::process(std::shared_ptr<StatusApi> &status, std::string_view path_to_image_folder,
-                                   NotificationCallback notification) noexcept {
+    std::unique_ptr<StatusApi> ProcessorWrapper::process(std::string_view path_to_image_folder,
+                                                         NotificationCallback notification) noexcept {
         if (!std::filesystem::exists(path_to_image_folder)) {
-            StatusWrapper::images_folder_was_not_found(status,
-                                                       std::string("folder was not found: ") +
-                                                       std::string(path_to_image_folder));
-            return;
+            return StatusWrapper::images_folder_was_not_found(std::string("folder was not found: ") +
+                                                              std::string(path_to_image_folder));
         }
         // TODO: create multi thread process
         for (auto itEntry = std::filesystem::recursive_directory_iterator(path_to_image_folder);
@@ -102,17 +96,15 @@ namespace processor {
                         auto detections = _detector->detect(img);
                         notification(file_path, detections.size());
                     } catch (const cv::Exception &error) {
-                        StatusWrapper::bad_image(status, file_path);
-                        return;
+                        return StatusWrapper::bad_image(file_path);
                     } catch (...) {
-                        StatusWrapper::unexpected_error(status, std::string("at file: ") + file_path);
-                        return;
+                        return StatusWrapper::unexpected_error(std::string("at file: ") + file_path);
                     }
                 }
             }
         }
 
-        StatusWrapper::success(status);
+        return StatusWrapper::success();
     }
 
 } // namespace processor
