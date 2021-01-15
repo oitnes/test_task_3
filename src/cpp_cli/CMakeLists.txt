@@ -1,0 +1,5 @@
+add_executable(cli_runner main.cpp)
+target_include_directories(cli_runner PRIVATE SYSTEM CONAN_PKG::boost)
+target_include_directories(cli_runner PRIVATE "../processor/include")
+target_link_libraries(cli_runner CONAN_PKG::boost dl)
+add_dependencies(cli_runner processor)

@@ -1,3 +1,3 @@
+add_subdirectory("detector")
 add_subdirectory("processor")
-add_subdirectory("processor_wrapper")
-add_subdirectory("runner")
+add_subdirectory("cpp_cli")
