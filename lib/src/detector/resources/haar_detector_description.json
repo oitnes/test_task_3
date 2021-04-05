@@ -1,0 +1,16 @@
+{
+  "type": "haar",
+  "settings": {
+    "cascade_file_name": "haarcascade.xml",
+    "neighbors_number": 3,
+    "min_object_size": {
+      "width": 10,
+      "height": 10
+    },
+    "max_object_size": {
+      "width": 200,
+      "height": 200
+    },
+    "scale_factor": 2.0
+  }
+}
