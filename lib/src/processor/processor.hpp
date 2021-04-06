@@ -5,6 +5,8 @@
 #include <functional>
 #include <memory>
 #include <set>
+#include <thread>
+#include <vector>
 
 #include <cstdint>
 
@@ -18,6 +20,7 @@ enum class StatusCode : std::size_t {
     INIT_FILES_WAS_NOT_FOUND = INIT_SUCCESS + 2,
     INIT_BAD_SETTINGS_FILE = INIT_SUCCESS + 3,
     INIT_BAD_DATA_FILE = INIT_SUCCESS + 4,
+    INIT_INCORRECT_WORKER_NUMBER = INIT_SUCCESS + 5,
 
     PROCESS_SUCCESS = 200,
     PROCESS_UNEXPECTED_ERROR = PROCESS_SUCCESS + 1,
@@ -42,10 +45,12 @@ namespace processing {
 
         StatusCode init(const InitConfig &config) noexcept;
 
-        StatusCode process(std::string path_to_image_folder, NotificationCallback &&notification) noexcept;
+        StatusCode process(const std::string &path_to_image_folder, NotificationCallback &&notification) noexcept;
 
     private:
-        std::unique_ptr<detection::Detector> _detector;
+        std::size_t _MAX_WORKER_COUNT = 10;
+
+        std::vector<std::unique_ptr<detection::Detector>> _detectors_pool;
     };
 
 } // namespace processing

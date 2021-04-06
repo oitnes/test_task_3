@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(processor_test_simple_by_caffe_detector)
         BOOST_CHECK(false);
     }
 
-    InitConfig init_config{detector_config_path.string()};
+    InitConfig init_config{4, detector_config_path.string()};
 
     processing::Processor processor;
     auto processor_init_result = processor.init(init_config);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(processor_test_simple_by_caffe_detector)
     std::atomic<std::size_t> faces_counter = 0;
     auto processor_process_result = processor.process(images_dir.string(),
                                                       [&images_counter, &faces_counter](
-                                                              std::string_view processed_image_path,
+                                                              std::string processed_image_path,
                                                               std::size_t faces_number) {
                                                           images_counter++;
                                                           faces_counter += faces_number;
