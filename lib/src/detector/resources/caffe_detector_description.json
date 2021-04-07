@@ -3,6 +3,7 @@
   "settings": {
     "network_structure_file": "deploy.prototxt",
     "weights_file_name": "res10_300x300_ssd_iter_140000.caffemodel",
-    "target_image_size": 300
+    "target_image_size": 300,
+    "confidence_level": "0.97"
   }
 }

@@ -11,3 +11,4 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_define_targets()
 
 add_subdirectory(lib)
+add_subdirectory(cli)

@@ -36,11 +36,11 @@ BOOST_AUTO_TEST_CASE(processor_test_simple_by_haar_detector)
         BOOST_CHECK(false);
     }
 
-    InitConfig init_config{4, detector_config_path.string()};
+    processing::InitConfig init_config{4, detector_config_path.string()};
 
     processing::Processor processor;
     auto processor_init_result = processor.init(init_config);
-    BOOST_CHECK_EQUAL(static_cast<std::size_t>(StatusCode::INIT_SUCCESS),
+    BOOST_CHECK_EQUAL(static_cast<std::size_t>(RESULT_CODE::INIT_SUCCESS),
                       static_cast<std::size_t>(processor_init_result));
 
     std::filesystem::path images_dir(std::filesystem::current_path() / "test_resources");
@@ -49,14 +49,14 @@ BOOST_AUTO_TEST_CASE(processor_test_simple_by_haar_detector)
     auto processor_process_result = processor.process(images_dir.string(),
                                                       [&images_counter, &faces_counter](
                                                               std::string processed_image_path,
-                                                              std::size_t faces_number) {
+                                                              std::vector<cv::Rect> faces) {
                                                           images_counter++;
-                                                          faces_counter += faces_number;
+                                                          faces_counter += faces.size();
                                                       });
-    BOOST_CHECK_EQUAL(static_cast<std::size_t>(StatusCode::PROCESS_SUCCESS),
+    BOOST_CHECK_EQUAL(static_cast<std::size_t>(RESULT_CODE::PROCESS_SUCCESS),
                       static_cast<std::size_t>(processor_process_result));
-    BOOST_CHECK_EQUAL(static_cast<std::size_t>(images_counter), 2);
-    BOOST_CHECK_EQUAL(static_cast<std::size_t>(faces_counter), 1);
+    BOOST_CHECK_EQUAL(static_cast<std::size_t>(images_counter), 6);
+    BOOST_CHECK_EQUAL(static_cast<std::size_t>(faces_counter), 3);
 
     std::filesystem::remove(detector_config_path);
 }
@@ -83,11 +83,11 @@ BOOST_AUTO_TEST_CASE(processor_test_simple_by_caffe_detector)
         BOOST_CHECK(false);
     }
 
-    InitConfig init_config{4, detector_config_path.string()};
+    processing::InitConfig init_config{4, detector_config_path.string()};
 
     processing::Processor processor;
     auto processor_init_result = processor.init(init_config);
-    BOOST_CHECK_EQUAL(static_cast<std::size_t>(StatusCode::INIT_SUCCESS),
+    BOOST_CHECK_EQUAL(static_cast<std::size_t>(RESULT_CODE::INIT_SUCCESS),
                       static_cast<std::size_t>(processor_init_result));
 
     std::filesystem::path images_dir(std::filesystem::current_path() / "test_resources");
@@ -96,14 +96,14 @@ BOOST_AUTO_TEST_CASE(processor_test_simple_by_caffe_detector)
     auto processor_process_result = processor.process(images_dir.string(),
                                                       [&images_counter, &faces_counter](
                                                               std::string processed_image_path,
-                                                              std::size_t faces_number) {
+                                                              std::vector<cv::Rect> faces) {
                                                           images_counter++;
-                                                          faces_counter += faces_number;
+                                                          faces_counter += faces.size();
                                                       });
-    BOOST_CHECK_EQUAL(static_cast<std::size_t>(StatusCode::PROCESS_SUCCESS),
+    BOOST_CHECK_EQUAL(static_cast<std::size_t>(RESULT_CODE::PROCESS_SUCCESS),
                       static_cast<std::size_t>(processor_process_result));
-    BOOST_CHECK_EQUAL(static_cast<std::size_t>(images_counter), 2);
-    BOOST_CHECK_EQUAL(static_cast<std::size_t>(faces_counter), 1);
+    BOOST_CHECK_EQUAL(static_cast<std::size_t>(images_counter), 6);
+    BOOST_CHECK_EQUAL(static_cast<std::size_t>(faces_counter), 3);
 
     std::filesystem::remove(detector_config_path);
 }

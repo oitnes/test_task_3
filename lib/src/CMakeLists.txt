@@ -1,2 +1,3 @@
 add_subdirectory(detector)
 add_subdirectory(processor)
+add_subdirectory(processor_wrapper)

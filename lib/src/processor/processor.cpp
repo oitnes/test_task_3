@@ -4,9 +4,7 @@
 
 #include <boost/property_tree/json_parser.hpp>
 
-#include <string>
-#include <thread>
-#include <iostream>
+#include <set>
 
 
 // TODO: add logging
@@ -104,14 +102,14 @@ namespace {
 
 namespace processing {
 
-    StatusCode Processor::init(const InitConfig &config) noexcept {
+    RESULT_CODE Processor::init(const InitConfig &config) noexcept {
 
         if ((config.workers_number < 1) || (config.workers_number > _MAX_WORKER_COUNT)) {
-            return StatusCode::INIT_INCORRECT_WORKER_NUMBER;
+            return RESULT_CODE::INIT_INCORRECT_WORKER_NUMBER;
         }
 
         if (!std::filesystem::exists(config.detector_description_file_path)) {
-            return StatusCode::INIT_FILES_WAS_NOT_FOUND;
+            return RESULT_CODE::INIT_FILES_WAS_NOT_FOUND;
         }
 
         std::ifstream file(config.detector_description_file_path);
@@ -120,7 +118,7 @@ namespace processing {
             buffer << file.rdbuf();
             file.close();
         } else {
-            return StatusCode::INIT_FILES_WAS_NOT_FOUND;
+            return RESULT_CODE::INIT_BAD_SETTINGS_FILE;
         }
 
         boost::property_tree::ptree detector_settings;
@@ -128,47 +126,41 @@ namespace processing {
             boost::property_tree::read_json(buffer, detector_settings);
         }
         catch (std::exception const &e) {
-            return StatusCode::INIT_BAD_SETTINGS_FILE;
+            return RESULT_CODE::INIT_BAD_SETTINGS_FILE;
         }
 
         for (int i = 0; i < config.workers_number; i++) {
-            std::unique_ptr<detection::Detector> detector;
             try {
                 _detectors_pool.emplace_back(detection::create_detector(detector_settings));
-            } catch (const std::exception &error) {
-                return StatusCode::INIT_BAD_DATA_FILE;
             } catch (...) {
-                return StatusCode::INIT_UNEXPECTED_ERROR;
+                _detectors_pool.clear();
+                return RESULT_CODE::INIT_BAD_DATA_FILE;
             }
         }
 
-        return StatusCode::INIT_SUCCESS;
+        return RESULT_CODE::INIT_SUCCESS;
     }
 
 
-    StatusCode
+    RESULT_CODE
     Processor::process(const std::string &path_to_image_folder, NotificationCallback &&notification) noexcept {
         std::set<std::string> extensions{".jpg", ".bmp", ".jpeg"};
 
         if (!std::filesystem::exists(path_to_image_folder)) {
-            return StatusCode::PROCESS_IMAGE_FOLDER_IS_NOT_EXISTS;
+            return RESULT_CODE::PROCESS_IMAGE_FOLDER_IS_NOT_EXISTS;
         }
 
         TaskQueue<std::string, 1000> paths_queue;
-        std::vector<std::thread> thread_pool;
+        std::vector<std::thread> workers;
         for (auto &detector: _detectors_pool) {
-            thread_pool.emplace_back([&detector, notification, &paths_queue]() {
-                std::thread::id this_id = std::this_thread::get_id();
+            workers.emplace_back([&detector, notification, &paths_queue]() {
                 while (auto task = paths_queue.wait_for_task()) {
                     try {
-                        auto file_path = task.data;
-                        std::cout << this_id;
-                        auto img = cv::imread(file_path, cv::IMREAD_COLOR);
-                        if (img.empty()) {
-                            continue; // pass
+                        auto img = cv::imread(task.data, cv::IMREAD_COLOR);
+                        if (!img.empty()) {
+                            auto detections = detector->detect(img);
+                            notification(task.data, detections);
                         }
-                        auto detections = detector->detect(img);
-                        notification(file_path, detections.size());
                     } catch (...) {
                         continue; // pass
                     }
@@ -187,11 +179,11 @@ namespace processing {
         }
         paths_queue.close();
 
-        for (auto &t: thread_pool) {
-            t.join();
+        for (auto &worker: workers) {
+            worker.join();
         }
 
-        return StatusCode::PROCESS_SUCCESS;
+        return RESULT_CODE::PROCESS_SUCCESS;
     }
 
 } // namespace processing

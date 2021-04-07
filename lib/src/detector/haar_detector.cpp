@@ -11,7 +11,7 @@ namespace detection {
                 _cascade_classifier.load(_detector_settings.cascade_path.string());
             }
             catch (std::exception const &e) {
-                RAISE_ERROR(CreationError, std::string("loading of haar cascade failed ") + e.what());
+                RAISE_ERROR(CreationError, std::string("loading of haar cascade failed: ") + e.what());
             }
         }
 

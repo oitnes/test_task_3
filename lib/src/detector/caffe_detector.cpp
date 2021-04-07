@@ -12,9 +12,10 @@ namespace detection {
                                                       _detector_settings.net_weights_path.string());
             }
             catch (std::exception const &e) {
-                RAISE_ERROR(CreationError, std::string("loading of caffe model failed ") + e.what());
+                RAISE_ERROR(CreationError, std::string("loading of caffe model failed: ") + e.what());
             }
         }
+
 
         std::vector<cv::Rect> CaffeDetector::detect(const cv::Mat &image) {
             cv::Mat blob = cv::dnn::blobFromImage(prepare_image_for_detection(image));
@@ -54,7 +55,7 @@ namespace detection {
 
         std::vector<cv::Rect>
         CaffeDetector::create_results(const cv::Mat &raw_results, int image_input_width, int image_input_height) const {
-            const int ARGUMENTS_NUMBER = 7; // this model has 7 positional result arguments for every detection
+            const int ARGUMENTS_NUMBER = 7; // model has 7 positional result arguments for every detection
             auto detections = raw_results.reshape(1, 1);
             const int detections_number = detections.cols / ARGUMENTS_NUMBER;
 

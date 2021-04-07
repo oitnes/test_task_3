@@ -1,0 +1,5 @@
+add_executable(cli_runner "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+target_include_directories(cli_runner PRIVATE SYSTEM CONAN_PKG::boost CONAN_PKG::opencv)
+target_include_directories(cli_runner PRIVATE "../lib/src/processor_wrapper/include")
+target_link_libraries(cli_runner CONAN_PKG::boost CONAN_PKG::opencv CONAN_PKG::zlib dl)
+add_dependencies(cli_runner detection_processor)
