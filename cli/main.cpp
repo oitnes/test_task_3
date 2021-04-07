@@ -3,6 +3,7 @@
 #include <boost/program_options.hpp>
 #include <boost/dll/import.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
 
 #include <opencv2/imgcodecs.hpp>
 
@@ -103,22 +104,53 @@ int main(int argc, const char **argv) {
         boost::property_tree::ptree result_json_root;
         boost::property_tree::read_json(json_buffer_for_parse, result_json_root);
 
-        std::string image_path;
-        try {
-            image_path = result_json_root.get<std::string>("image_path");
+        auto image_path_str = result_json_root.get_optional<std::string>("image_path");
+        if (!image_path_str) {
+            std::cerr << "can't get image path from result json.\n";
+            return;
         }
-        catch (const std::exception &e) {
-            std::cerr << std::string(e.what()) + "\n";
+        const std::string image_path{image_path_str.value()};
+
+        auto img = cv::imread(image_path, cv::IMREAD_COLOR);
+        if (img.empty()) {
+            std::cerr << std::string("can't open image by path: ") + image_path + "\n";
             return;
         }
 
-        auto img = cv::imread(image_path, cv::IMREAD_COLOR);
-        if (!img.empty()) {
-            std::cout << std::string("received result json: ") + result_json_str + "\n";
-        } else {
-            std::cerr << "can't open image\n";
+        int detections_counter = 0;
+        auto detections_json_array = result_json_root.get_child_optional("detections");
+        if (detections_json_array) {
+            BOOST_FOREACH(boost::property_tree::ptree::value_type &rowPair, detections_json_array.value()) {
+                            detections_counter++;
+                            auto current_image_path =
+                                    image_path + ".face_" + std::to_string(detections_counter) + ".jpg";
+
+                            auto &detection_obj = rowPair.second.get_child("");
+                            auto x = detection_obj.get_optional<int>("x");
+                            auto y = detection_obj.get_optional<int>("y");
+                            auto width = detection_obj.get_optional<int>("width");
+                            auto height = detection_obj.get_optional<int>("height");
+
+                            cv::Mat flopped_face_roi;
+                            cv::Mat face_roi(img, cv::Rect(x.value(), y.value(), width.value(), height.value()));
+                            cv::flip(face_roi, flopped_face_roi, 0);
+                            cv::imwrite(current_image_path, flopped_face_roi);
+
+                            detection_obj.add("image_path", current_image_path);
+                        }
         }
 
+        std::cout << std::to_string(detections_counter) + std::string(" detections by path: ") + image_path + "\n";
+
+        auto result_json_file_path = image_path + ".result.json";
+        std::ofstream result_json_file(result_json_file_path);
+        if (result_json_file) {
+            boost::property_tree::write_json(result_json_file, result_json_root);
+            result_json_file.close();
+        } else {
+            std::cerr << std::string("can't create result file by path: ") + result_json_file_path + "\n";
+            return;
+        }
     };
     auto process_result_code = process_fn(images_dir.c_str(), callback);
     if (process_result_code != RESULT_CODE::PROCESS_SUCCESS) {
